@@ -1,0 +1,57 @@
+server:
+  port: 8080
+
+spring:
+  rabbitmq:
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 100ms
+          max-attempts: 3
+          max-interval: 1000ms
+          stateless: true
+          multiplier: 1.2
+        acknowledge-mode: auto
+        auto-startup: true
+        batch-size: 10
+        concurrency: 3
+        consumer-batch-enabled: true
+        de-batching-enabled: true
+        default-requeue-rejected: true
+        idle-event-interval: 10ms
+        max-concurrency: 4
+        missing-queues-fatal: true
+        prefetch: 100
+
+    template:
+      retry:
+        enabled: true
+        initial-interval: 100ms
+        max-attempts: 3
+        max-interval: 1000ms
+        multiplier: 1.2
+      default-receive-queue: queue-2
+      exchange: exchange-batch
+      routing-key: routing.batch
+      reply-timeout: 1000ms
+      receive-timeout: 1000ms
+      mandatory: true
+
+    address-shuffle-mode: random
+    requested-channel-max: 100
+    channel-rpc-timeout: 120000ms
+
+#    stream:
+#      host: localhost
+#      port: 5672
+#      name: stream-1
+#      password: guest
+#      username: guest
+    cache:
+      connection:
+        mode: connection
+        size: 5
+      channel:
+        checkout-timeout: 5000ms
+        size: 100
