@@ -8,11 +8,11 @@ import java.util.List;
 @Slf4j
 public class BatchMessageReceiver {
 
-    @RabbitListener(queues = {"queue-2"})
+    @RabbitListener(queues = {"queue-batch"})
     public void receiveBatch(List<String> messages) {
-        log.info("Received: {}", messages.size());
+        log.info("Received list of messages: {}", messages.size());
         for (var message : messages) {
-            log.info("Mess: {}", message);
+            log.info("Mess list item: {}", message);
         }
     }
 

@@ -17,64 +17,77 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AppBeansConfig {
 
-    private final String EXCHANGE_SINGLE = "exchange-single";
-    private final String EXCHANGE_BATCH = "exchange-batch";
-    private final String BINDING_SINGLE = "bindingSingle";
-    private final String BINDING_BATCH = "bindingBatch";
-    private final String ROUTING_KEY_SINGLE = "routing.single";
-    private final String ROUTING_KEY_BATCH = "routing.batch";
-    private final String queueName1 = "queue-1";
-    private final String queueName2 = "queue-2";
+    private final String exchangeSingle = "exchange-single";
+    private final String exchangeBatch = "exchange-batch";
+    private final String bindingSingle = "bindingSingle";
+    private final String bindingBatch = "bindingBatch";
+    private final String routingKeySingle = "routing.single";
+    private final String routingKeyBatch = "routing.batch";
+    private final String queueSingle = "queue-single";
+    private final String queueBatch = "queue-batch";
 
     @Bean
-    @Qualifier(queueName1)
-    public Queue queue1() {
-        return new Queue(queueName1, false);
+    @Qualifier(queueSingle)
+    public Queue queueSingle() {
+        return new Queue(queueSingle, false);
     }
 
     @Bean
-    @Qualifier(queueName2)
-    public Queue queue2() {
-        return new Queue(queueName2, false);
+    @Qualifier(queueBatch)
+    public Queue queueBatch() {
+        return new Queue(queueBatch, false);
     }
 
     @Bean
-    @Qualifier(EXCHANGE_SINGLE)
+    @Qualifier(exchangeSingle)
     public TopicExchange exchangeSingle() {
-        return new TopicExchange(EXCHANGE_SINGLE);
+        return new TopicExchange(exchangeSingle);
     }
 
     @Bean
-    @Qualifier(EXCHANGE_BATCH)
+    @Qualifier(exchangeBatch)
     public TopicExchange exchangeBatch() {
-        return new TopicExchange(EXCHANGE_BATCH);
+        return new TopicExchange(exchangeBatch);
     }
 
     @Bean
-    @Qualifier(BINDING_SINGLE)
-    public Binding bindingSingle(@Qualifier(queueName1) Queue queue,
-                                 @Qualifier(EXCHANGE_SINGLE) TopicExchange exchange) {
+    @Qualifier(bindingSingle)
+    public Binding bindingSingle(@Qualifier(queueSingle) Queue queue,
+                                 @Qualifier(exchangeSingle) TopicExchange exchange) {
         return BindingBuilder.bind(queue)
                 .to(exchange)
-                .with(ROUTING_KEY_SINGLE);
+                .with(routingKeySingle);
     }
 
     @Bean
-    @Qualifier(BINDING_BATCH)
-    public Binding binding(@Qualifier(queueName2) Queue queue,
-                           @Qualifier(EXCHANGE_BATCH) TopicExchange exchange) {
+    @Qualifier(bindingBatch)
+    public Binding bindingBatch(@Qualifier(queueBatch) Queue queue,
+                                @Qualifier(exchangeBatch) TopicExchange exchange) {
         return BindingBuilder.bind(queue)
                 .to(exchange)
-                .with(ROUTING_KEY_BATCH);
+                .with(routingKeyBatch);
     }
 
     @Bean
-    public SimpleMessageListenerContainer container(ConnectionFactory connectionFactory,
+    @Qualifier("singleContainer")
+    public SimpleMessageListenerContainer singleContainer(ConnectionFactory connectionFactory,
+                                                    @Qualifier("singleAdapter")
+                                                    MessageListenerAdapter listenerAdapter) {
+        var container = new SimpleMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+        container.setQueueNames(queueSingle);
+        container.setMessageListener(listenerAdapter);
+        return container;
+    }
+
+    @Bean
+    @Qualifier("batchContainer")
+    public SimpleMessageListenerContainer batchContainer(ConnectionFactory connectionFactory,
                                                     @Qualifier("batchAdapter")
                                                     MessageListenerAdapter listenerAdapter) {
-        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
+        var container = new SimpleMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
-        container.setQueueNames(queueName1, queueName2);
+        container.setQueueNames(queueBatch);
         container.setMessageListener(listenerAdapter);
         return container;
     }

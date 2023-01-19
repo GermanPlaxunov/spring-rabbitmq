@@ -2,11 +2,11 @@
 POST http://localhost:8080/sendSingleMessage
 Content-Type: application/x-www-form-urlencoded
 
-message="Hello, German!"
+message="Hello, Rabbit!"
 
 
 ### Send POST request with body as parameters
 POST http://localhost:8080/sendBatch
 Content-Type: application/x-www-form-urlencoded
 
-message="Hello, German!"&batchSize=10
+message="Hello, Rabbit!"&batchSize=10

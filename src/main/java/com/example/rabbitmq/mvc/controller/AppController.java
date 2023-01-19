@@ -1,5 +1,7 @@
 package com.example.rabbitmq.mvc.controller;
 
+import com.example.rabbitmq.rabbit.BatchMessageReceiver;
+import com.example.rabbitmq.rabbit.SingleMessageReceiver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -8,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
@@ -18,7 +21,7 @@ public class AppController {
 
     @PostMapping(path = "/sendSingleMessage")
     public void sendSingleMessage(@RequestParam("message") String message) {
-        rabbitTemplate.convertAndSend("spring-boot-exchange", "foo.bar.single", message);
+        rabbitTemplate.convertAndSend("exchange-single", "routing.single", message);
     }
 
     @PostMapping(path = "/sendBatch")
@@ -26,9 +29,9 @@ public class AppController {
                           @RequestParam("message") String message) {
         var list = new ArrayList<String>();
         for (var i = 0; i < batchSize; i++) {
-            list.add(message);
+            list.add(message.concat(String.valueOf(i)));
         }
-        rabbitTemplate.convertAndSend("spring-boot-exchange", "foo.bar.batch", list);
+        rabbitTemplate.convertAndSend("exchange-batch", "routing.batch", list);
     }
 
 }

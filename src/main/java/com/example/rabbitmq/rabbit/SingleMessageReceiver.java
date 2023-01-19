@@ -6,7 +6,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 @Slf4j
 public class SingleMessageReceiver {
 
-//    @RabbitListener(queues = {"queue-1"})
+    @RabbitListener(queues = {"queue-single"})
     public void receiveMessage(String message) {
         log.info("Received message: <{}>", message);
     }
