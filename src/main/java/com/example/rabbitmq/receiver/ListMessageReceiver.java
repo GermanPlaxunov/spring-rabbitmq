@@ -1,4 +1,4 @@
-package com.example.rabbitmq.rabbit;
+package com.example.rabbitmq.receiver;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -6,10 +6,10 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import java.util.List;
 
 @Slf4j
-public class BatchMessageReceiver {
+public class ListMessageReceiver {
 
-    @RabbitListener(queues = {"queue-batch"})
-    public void receiveBatch(List<String> messages) {
+    @RabbitListener(queues = {"queue-list"})
+    public void receiveList(List<String> messages) {
         log.info("Received list of messages: {}", messages.size());
         for (var message : messages) {
             log.info("Mess list item: {}", message);

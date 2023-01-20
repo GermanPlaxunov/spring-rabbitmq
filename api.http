@@ -6,7 +6,18 @@ message="Hello, Rabbit!"
 
 
 ### Send POST request with body as parameters
-POST http://localhost:8080/sendBatch
+POST http://localhost:8080/sendList
 Content-Type: application/x-www-form-urlencoded
 
-message="Hello, Rabbit!"&batchSize=10
+message=Hello, Rabbit!&listSize=20
+
+
+### Send POST request with body as parameters
+POST http://localhost:8080/sendPerson
+Content-Type: application/json
+
+{
+  "firstName": "German",
+  "surname": "Plaxunov",
+  "position": "jun:)"
+}
