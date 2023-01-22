@@ -1,14 +1,12 @@
 package com.example.rabbitmq.config;
 
-import com.example.rabbitmq.receiver.ListMessageReceiver;
-import com.example.rabbitmq.receiver.PersonReceiver;
-import com.example.rabbitmq.receiver.SingleMessageReceiver;
+import com.example.rabbitmq.receiver.MessageReceiver;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
-import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -20,22 +18,27 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AppBeansConfig {
 
-    private final String exchangeSingle = "exchange-single";
-    private final String exchangeList = "exchange-list";
-    private final String exchangePerson = "exchange-person";
+    private final String exchange = "main";
     private final String bindingSingle = "bindingSingle";
-    private final String bindingList = "bindingList";
-    private final String bindingPerson = "bindingPerson";
-    private final String routingKeySingle = "routing.single";
-    private final String routingKeyList = "routing.list";
-    private final String routingKeyPerson = "routing.person";
+    private final String routingKeySingle = "foo.bar.single";
+    private final String routingKeyPerson = "person.main";
+    private final String routingKeyPersonAlt = "person.alt";
+    private final String routingKeyPersonWildCard = "person.*";
     private final String queueSingle = "queue-single";
-    private final String queueList = "queue-list";
     private final String queuePerson = "queue-person";
+    private final String queuePersonAlt = "queue-person-alt";
 
     @Bean
-    public Jackson2JsonMessageConverter messageConverter() {
+    public MessageConverter messageConverter() {
         return new Jackson2JsonMessageConverter();
+    }
+
+    @Bean
+    public RabbitTemplate rabbitTemplate(ConnectionFactory factory,
+                                         MessageConverter converter) {
+        var template = new RabbitTemplate(factory);
+        template.setMessageConverter(converter);
+        return template;
     }
 
     @Bean
@@ -45,128 +48,85 @@ public class AppBeansConfig {
     }
 
     @Bean
-    @Qualifier(queueList)
-    public Queue queueList() {
-        return new Queue(queueList, false);
-    }
-
-    @Bean
     @Qualifier(queuePerson)
     public Queue queuePerson() {
-        return new Queue(queuePerson, false);
+        return new Queue(queuePerson);
     }
 
     @Bean
-    @Qualifier(exchangeSingle)
-    public TopicExchange exchangeSingle() {
-        return new TopicExchange(exchangeSingle);
+    @Qualifier(queuePersonAlt)
+    public Queue queuePersonAlt() {
+        return new Queue(queuePersonAlt);
     }
 
     @Bean
-    @Qualifier(exchangeList)
-    public TopicExchange exchangeList() {
-        return new TopicExchange(exchangeList);
+    public TopicExchange exchange() {
+        return new TopicExchange(exchange);
     }
 
     @Bean
-    @Qualifier(exchangePerson)
-    public TopicExchange exchangePerson() {
-        return new TopicExchange(exchangePerson);
-    }
-
-    @Bean
-    @Qualifier(bindingSingle)
-    public Binding bindingSingle(@Qualifier(queueSingle) Queue queue,
-                                 @Qualifier(exchangeSingle) TopicExchange exchange) {
+    public Binding bindingSingle(@Qualifier(queueSingle) Queue queue, TopicExchange exchange) {
         return BindingBuilder.bind(queue)
                 .to(exchange)
                 .with(routingKeySingle);
     }
 
     @Bean
-    @Qualifier(bindingList)
-    public Binding bindingList(@Qualifier(queueList) Queue queue,
-                               @Qualifier(exchangeList) TopicExchange exchange) {
-        return BindingBuilder.bind(queue)
-                .to(exchange)
-                .with(routingKeyList);
-    }
-
-    @Bean
-    @Qualifier(bindingPerson)
-    public Binding bindingPerson(@Qualifier(queuePerson) Queue queue,
-                                 @Qualifier(exchangePerson) TopicExchange exchange) {
+    public Binding bindingPerson(@Qualifier(queuePerson) Queue queue, TopicExchange exchange) {
         return BindingBuilder.bind(queue)
                 .to(exchange)
                 .with(routingKeyPerson);
     }
 
     @Bean
-    @Qualifier("singleContainer")
+    public Binding bindingPersonAlt(@Qualifier(queuePersonAlt) Queue queue, TopicExchange exchange) {
+        return BindingBuilder.bind(queue)
+                .to(exchange)
+                .with(routingKeyPersonAlt);
+    }
+
+    @Bean
     public SimpleMessageListenerContainer singleContainer(ConnectionFactory connectionFactory,
-                                                          @Qualifier("singleAdapter")
-                                                          MessageListenerAdapter listenerAdapter) {
+                                                    @Qualifier("singleAdapter")
+                                                    MessageListenerAdapter adapter) {
         var container = new SimpleMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
         container.setQueueNames(queueSingle);
-        container.setMessageListener(listenerAdapter);
+        container.setMessageListener(adapter);
         return container;
     }
 
     @Bean
-    @Qualifier("listContainer")
-    public SimpleMessageListenerContainer listContainer(ConnectionFactory connectionFactory,
-                                                        @Qualifier("listAdapter")
-                                                        MessageListenerAdapter listenerAdapter) {
-        var container = new SimpleMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory);
-        container.setQueueNames(queueList);
-        container.setMessageListener(listenerAdapter);
-        return container;
-    }
-
-    @Bean
-    @Qualifier("personContainer")
     public SimpleMessageListenerContainer personContainer(ConnectionFactory connectionFactory,
                                                           @Qualifier("personAdapter")
-                                                          MessageListenerAdapter listenerAdapter) {
+                                                          MessageListenerAdapter adapter) {
         var container = new SimpleMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
-        container.setQueueNames(queuePerson);
-        container.setMessageListener(listenerAdapter);
+        container.setQueueNames(queuePerson, queuePersonAlt);
+        container.setMessageListener(adapter);
         return container;
     }
 
     @Bean
     @Qualifier("singleAdapter")
-    public MessageListenerAdapter singleListenerAdapter(SingleMessageReceiver singleMessageReceiver) {
-        return new MessageListenerAdapter(singleMessageReceiver, "receiveMessage");
+    public MessageListenerAdapter singleListenerAdapter(MessageReceiver messageReceiver,
+                                                        MessageConverter converter) {
+        var adapter = new MessageListenerAdapter(messageReceiver, "receiveMessage");
+        adapter.setMessageConverter(converter);
+        return adapter;
     }
 
     @Bean
     @Qualifier("personAdapter")
-    public MessageListenerAdapter personListenerAdapter(PersonReceiver personReceiver) {
-        return new MessageListenerAdapter(personReceiver, "receivePerson");
+    public MessageListenerAdapter personListenerAdapter(MessageReceiver messageReceiver,
+                                                        MessageConverter converter) {
+        var adapter = new MessageListenerAdapter(messageReceiver, "receivePerson");
+        adapter.setMessageConverter(converter);
+        return adapter;
     }
 
     @Bean
-    @Qualifier("listAdapter")
-    public MessageListenerAdapter listListenerAdapter(ListMessageReceiver receiver) {
-        return new MessageListenerAdapter(receiver, "receiveList");
-    }
-
-    @Bean
-    public SingleMessageReceiver singleReceiver() {
-        return new SingleMessageReceiver();
-    }
-
-    @Bean
-    public ListMessageReceiver listMessageReceiver() {
-        return new ListMessageReceiver();
-    }
-
-    @Bean
-    public PersonReceiver personReceiver() {
-        return new PersonReceiver();
+    public MessageReceiver messageReceiver() {
+        return new MessageReceiver();
     }
 }
