@@ -3,12 +3,16 @@ package com.example.rabbitmq.mvc.controller;
 import com.example.rabbitmq.model.Person;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.http.MediaType;
+import org.springframework.util.SerializationUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.WebUtils;
 
 import java.util.ArrayList;
 
@@ -21,7 +25,7 @@ public class AppController {
 
     @PostMapping(path = "/sendSingleMessage")
     public void sendSingleMessage(@RequestParam("message") String message) {
-        rabbitTemplate.convertAndSend("exchange-single", "routing.single", message);
+        rabbitTemplate.convertAndSend("main", "foo.bar.single", message);
     }
 
     @PostMapping(path = "/sendList")
@@ -34,8 +38,10 @@ public class AppController {
         rabbitTemplate.convertAndSend("exchange-list", "routing.list", list);
     }
 
-    @PostMapping(path = "/sendPerson")
+    @PostMapping(path = "/sendPerson",
+            consumes = MediaType.APPLICATION_JSON_VALUE + WebUtils.CONTENT_TYPE_CHARSET_PREFIX + "UTF-8",
+            produces = MediaType.APPLICATION_JSON_VALUE + WebUtils.CONTENT_TYPE_CHARSET_PREFIX + "UTF-8")
     public void sendBatch(@RequestBody Person person) {
-        rabbitTemplate.convertAndSend("exchange-person", "routing.person", person);
+        rabbitTemplate.convertAndSend("main", "foo.bar.person", person);
     }
 }

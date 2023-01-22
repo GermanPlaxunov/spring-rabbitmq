@@ -1,48 +1,50 @@
-server:
-  port: 8080
-
-spring:
-  rabbitmq:
-    bindings:
-      queue-batch:
-        producer:
-          batchingEnabled: true
-          batchSize: 3
-          batchBufferLimit: 5
-          batchTimeout: 5000ms
-    listener:
-      simple:
-        retry:
-          enabled: true
-          initial-interval: 100ms
-          max-attempts: 3
-          max-interval: 1000ms
-          stateless: true
-          multiplier: 1.2
-        acknowledge-mode: auto
-        auto-startup: true
-        batch-size: 10
-        concurrency: 3
-        consumer-batch-enabled: off
-        de-batching-enabled: false
-        default-requeue-rejected: true
-        idle-event-interval: 10ms
-        max-concurrency: 4
-        missing-queues-fatal: true
-        prefetch: 10
-      direct:
-        prefetch: 10
-
-    template:
-      retry:
-        enabled: true
-        initial-interval: 100ms
-        max-attempts: 3
-        max-interval: 1000ms
-        multiplier: 1.2
-      default-receive-queue: queue-batch
-      exchange: exchange-batch
-      routing-key: routing.batch
-      reply-timeout: 1000ms
-      receive-timeout: 1000ms
-      mandatory: true
+#server:
+#  port: 8080
+#
+#spring:
+#  rabbitmq:
+#    bindings:
+#      queue-batch:
+#        producer:
+#          batchingEnabled: true
+#          batchSize: 3
+#          batchBufferLimit: 5
+#          batchTimeout: 5000ms
+#    listener:
+#      simple:
+#        retry:
+#          enabled: true
+#          initial-interval: 100ms
+#          max-attempts: 3
+#          max-interval: 1000ms
+#          stateless: true
+#          multiplier: 1.2
+#        acknowledge-mode: auto
+#        auto-startup: true
+#        batch-size: 10
+#        concurrency: 3
+#        consumer-batch-enabled: off
+#        de-batching-enabled: false
+#        default-requeue-rejected: true
+#        idle-event-interval: 10ms
+#        max-concurrency: 4
+#        missing-queues-fatal: true
+#        prefetch: 10
+#      direct:
+#        prefetch: 10
+#    template:
+#      retry:
+#        enabled: true
+#        initial-interval: 100ms
+#        max-attempts: 3
+#        max-interval: 1000ms
+#        multiplier: 1.2
+#      default-receive-queue: queue-batch
+#      exchange: exchange-batch
+#      routing-key: routing.batch
+#      reply-timeout: 1000ms
+#      receive-timeout: 1000ms
+#      mandatory: true
+#    ssl:
+#      algorithm:
+#
